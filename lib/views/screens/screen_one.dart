@@ -3,10 +3,13 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:food_app/controllers/que_contoller.dart';
+import 'package:food_app/helpers/database_helper.dart';
+import 'package:food_app/models/cart_model.dart';
+import 'package:food_app/views/screens/details_page.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../helpers/database_helper.dart';
+import '../../controllers/cart_controller.dart';
 
 class Screen_1 extends StatefulWidget {
   const Screen_1({Key? key}) : super(key: key);
@@ -24,10 +27,24 @@ class _Screen_1State extends State<Screen_1>
     "Fruit",
   ];
   Quentity_contoller quentity_contoller = Get.put(Quentity_contoller());
+  Cartcontroller cartcontroller = Get.put(Cartcontroller());
   @override
   void initState() {
     super.initState();
     tabController = TabController(length: mytabs.length, vsync: this);
+  }
+
+  List searchlist = [];
+  bool search = false;
+  String name = '';
+  void serachname(String query) async {
+    final result = await FirebaseFirestore.instance
+        .collection('all')
+        .where('name', isEqualTo: query)
+        .get();
+    setState(() {
+      searchlist = result.docs.map((e) => e.data()).toList();
+    });
   }
 
   @override
@@ -35,27 +52,27 @@ class _Screen_1State extends State<Screen_1>
     return Scaffold(
         appBar: AppBar(
           bottom: TabBar(
-              indicatorColor: Color(0xffE12E4B),
+              indicatorColor: const Color(0xffE12E4B),
               indicatorSize: TabBarIndicatorSize.label,
-              labelColor: Color(0xffE12E4B),
+              labelColor: const Color(0xffE12E4B),
               unselectedLabelColor: Colors.grey.shade500,
               labelStyle: GoogleFonts.alegreya(
                   fontWeight: FontWeight.bold, fontSize: 16, letterSpacing: 2),
               controller: tabController,
               tabs: [
-                Tab(
+                const Tab(
                   text: "All",
                 ),
-                Tab(
+                const Tab(
                   text: "Fast food",
                 ),
-                Tab(
+                const Tab(
                   text: "Fruit",
                 ),
               ]),
           leading: IconButton(
             onPressed: () {},
-            icon: Icon(
+            icon: const Icon(
               Icons.menu,
               color: Color(0xffE12E4B),
               size: 27,
@@ -65,19 +82,25 @@ class _Screen_1State extends State<Screen_1>
             "Foodies",
             style: GoogleFonts.alegreya(
                 letterSpacing: 3,
-                color: Color(0xffE12E4B),
+                color: const Color(0xffE12E4B),
                 fontSize: 22,
                 fontWeight: FontWeight.bold),
           ),
           actions: [
-            Padding(
-              padding: const EdgeInsets.only(
-                bottom: 5,
+            Container(
+              height: 70,
+              width: 70,
+              decoration: BoxDecoration(
+                  color: const Color(0xffE12E4B).withOpacity(0.3),
+                  shape: BoxShape.circle),
+              child: const Icon(
+                Icons.person,
+                size: 30,
+                color: Color(0xffE12E4B),
               ),
-              child: CircleAvatar(
-                radius: 40,
-                backgroundColor: Colors.pinkAccent.shade100,
-              ),
+            ),
+            const SizedBox(
+              width: 10,
             )
           ],
         ),
@@ -89,12 +112,17 @@ class _Screen_1State extends State<Screen_1>
                 Padding(
                   padding: const EdgeInsets.only(left: 15, right: 15, top: 10),
                   child: TextFormField(
+                    onChanged: (query) {
+                      setState(() {
+                        serachname(query);
+                      });
+                    },
                     decoration: InputDecoration(
-                        border: OutlineInputBorder(),
-                        enabledBorder: OutlineInputBorder(
+                        border: const OutlineInputBorder(),
+                        enabledBorder: const OutlineInputBorder(
                           borderSide: BorderSide(color: Colors.grey),
                         ),
-                        focusedBorder: OutlineInputBorder(
+                        focusedBorder: const OutlineInputBorder(
                           borderSide: BorderSide(color: Color(0xffE12E4B)),
                         ),
                         prefixIcon: Icon(
@@ -119,7 +147,7 @@ class _Screen_1State extends State<Screen_1>
                         QuerySnapshot<Map<String, dynamic>>? data =
                             snapshot.data;
                         if (data == null) {
-                          return Center(
+                          return const Center(
                             child: Text("No data Available"),
                           );
                         } else {
@@ -129,11 +157,29 @@ class _Screen_1State extends State<Screen_1>
                             padding: const EdgeInsets.all(10),
                             child: GridView.builder(
                               itemCount: alldata.length,
-                              itemBuilder: (context, index) => productbox(
-                                data: alldata[index],
-                                image: alldata[index].data()['image'],
-                                name: alldata[index].data()['name'],
-                                price: alldata[index].data()['price'],
+                              itemBuilder: (context, index) => GestureDetector(
+                                onTap: () {
+                                  Navigator.of(context).push(MaterialPageRoute(
+                                    builder: (context) => Details_page(
+                                      rating: alldata[index].data()['rating'],
+                                      name: alldata[index].data()['name'],
+                                      price: alldata[index].data()['price'],
+                                      image: alldata[index].data()['image'],
+                                      des: alldata[index].data()['des'],
+                                    ),
+                                  ));
+                                },
+                                child: productbox(
+                                  data: Cartmodel(
+                                    name: alldata[index].data()['name'],
+                                    price: alldata[index].data()['price'],
+                                    image: alldata[index].data()['image'],
+                                    que: alldata[index].data()['que'],
+                                  ),
+                                  image: alldata[index].data()['image'],
+                                  name: alldata[index].data()['name'],
+                                  price: alldata[index].data()['price'],
+                                ),
                               ),
                               gridDelegate:
                                   SliverGridDelegateWithFixedCrossAxisCount(
@@ -147,7 +193,7 @@ class _Screen_1State extends State<Screen_1>
                           );
                         }
                       } else {
-                        return Center(
+                        return const Center(
                           child: CircularProgressIndicator(
                             color: Color(0xffE12E4B),
                           ),
@@ -166,7 +212,7 @@ class _Screen_1State extends State<Screen_1>
                 } else if (snapshot.hasData) {
                   QuerySnapshot<Map<String, dynamic>>? data = snapshot.data;
                   if (data == null) {
-                    return Text("No data Available");
+                    return const Text("No data Available");
                   } else {
                     List<QueryDocumentSnapshot<Map<String, dynamic>>> alldata =
                         data.docs;
@@ -180,17 +226,38 @@ class _Screen_1State extends State<Screen_1>
                                     (MediaQuery.of(context).size.height / 1.5),
                             crossAxisCount: 2),
                         itemBuilder: (BuildContext context, int index) {
-                          return productbox(
-                              image: alldata[index].data()['image'],
-                              name: alldata[index].data()['name'],
-                              price: alldata[index].data()['price'],
-                              data: alldata[index]);
+                          return GestureDetector(
+                              onTap: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                      builder: (context) => Details_page(
+                                            rating:
+                                                alldata[index].data()['rating'],
+                                            name: alldata[index].data()['name'],
+                                            price:
+                                                alldata[index].data()['price'],
+                                            image:
+                                                alldata[index].data()['image'],
+                                            des: alldata[index].data()['des'],
+                                          )),
+                                );
+                              },
+                              child: productbox(
+                                  image: alldata[index].data()['image'],
+                                  name: alldata[index].data()['name'],
+                                  price: alldata[index].data()['price'],
+                                  data: Cartmodel(
+                                    que: alldata[index].data()['que'],
+                                    name: alldata[index].data()['name'],
+                                    price: alldata[index].data()['price'],
+                                    image: alldata[index].data()['image'],
+                                  )));
                         },
                       ),
                     );
                   }
                 } else {
-                  return Center(
+                  return const Center(
                       child: CircularProgressIndicator(
                     color: Color(0xffE12E4B),
                   ));
@@ -205,7 +272,7 @@ class _Screen_1State extends State<Screen_1>
                 } else if (snapshot.hasData) {
                   QuerySnapshot<Map<String, dynamic>>? data = snapshot.data;
                   if (data == null) {
-                    return Text("No data Available");
+                    return const Text("No data Available");
                   } else {
                     List<QueryDocumentSnapshot<Map<String, dynamic>>> alldata =
                         data.docs;
@@ -219,17 +286,37 @@ class _Screen_1State extends State<Screen_1>
                                     (MediaQuery.of(context).size.height / 1.5),
                             crossAxisCount: 2),
                         itemBuilder: (BuildContext context, int index) {
-                          return productbox(
-                              image: alldata[index].data()['image'],
-                              name: alldata[index].data()['name'],
-                              price: alldata[index].data()['price'],
-                              data: alldata[index]);
+                          return GestureDetector(
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                    builder: (context) => Details_page(
+                                          rating:
+                                              alldata[index].data()['rating'],
+                                          name: alldata[index].data()['name'],
+                                          price: alldata[index].data()['price'],
+                                          image: alldata[index].data()['image'],
+                                          des: alldata[index].data()['des'],
+                                        )),
+                              );
+                            },
+                            child: productbox(
+                                image: alldata[index].data()['image'],
+                                name: alldata[index].data()['name'],
+                                price: alldata[index].data()['price'],
+                                data: Cartmodel(
+                                  que: alldata[index].data()['que'],
+                                  name: alldata[index].data()['name'],
+                                  price: alldata[index].data()['price'],
+                                  image: alldata[index].data()['image'],
+                                )),
+                          );
                         },
                       ),
                     );
                   }
                 } else {
-                  return Center(
+                  return const Center(
                       child: CircularProgressIndicator(
                     color: Color(0xffE12E4B),
                   ));
@@ -250,19 +337,19 @@ class _Screen_1State extends State<Screen_1>
       {required String image,
       required String name,
       required int price,
-      required QueryDocumentSnapshot<Map<String, dynamic>> data}) {
+      required Cartmodel data}) {
     return Column(
       children: [
         Container(
-          padding: EdgeInsets.all(2),
-          margin: EdgeInsets.only(
+          padding: const EdgeInsets.all(2),
+          margin: const EdgeInsets.only(
             left: 5,
             right: 5,
           ),
           height: 154,
           decoration: BoxDecoration(
-            color: Color(0xffE12E4B).withOpacity(0.2),
-            borderRadius: BorderRadius.only(
+            color: const Color(0xffE12E4B).withOpacity(0.2),
+            borderRadius: const BorderRadius.only(
               topLeft: Radius.circular(10),
               topRight: Radius.circular(10),
             ),
@@ -277,20 +364,20 @@ class _Screen_1State extends State<Screen_1>
                           base64Decode(image),
                         ),
                         fit: BoxFit.cover),
-                    color: Color(0xffE12E4B).withOpacity(0.2),
+                    color: const Color(0xffE12E4B).withOpacity(0.2),
                     borderRadius: BorderRadius.circular(10)),
               )
             ],
           ),
         ),
         Container(
-          margin: EdgeInsets.only(left: 5, right: 5),
-          padding: EdgeInsets.only(left: 10, right: 5),
+          margin: const EdgeInsets.only(left: 5, right: 5),
+          padding: const EdgeInsets.only(left: 10, right: 5),
           height: 65,
           width: 300,
           decoration: BoxDecoration(
-            border: Border.all(color: Color(0xffE12E4B).withOpacity(0.3)),
-            borderRadius: BorderRadius.only(
+            border: Border.all(color: const Color(0xffE12E4B).withOpacity(0.3)),
+            borderRadius: const BorderRadius.only(
               bottomRight: Radius.circular(10),
               bottomLeft: Radius.circular(10),
             ),
@@ -321,9 +408,13 @@ class _Screen_1State extends State<Screen_1>
               ),
               IconButton(
                   onPressed: () {
-                    quentity_contoller.addcart(data: data);
+                    cartcontroller.addcart(data: data);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Add to Cart ")));
+
+                    quentity_contoller.one();
                   },
-                  icon: Icon(Icons.add_shopping_cart)),
+                  icon: const Icon(Icons.add_shopping_cart)),
             ],
           ),
         )

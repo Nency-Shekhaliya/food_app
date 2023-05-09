@@ -3,33 +3,26 @@ import 'package:food_app/models/que_models.dart';
 import 'package:get/get.dart';
 
 class Quentity_contoller extends GetxController {
+  List<QueryDocumentSnapshot<Map<String, dynamic>>> addedproduct = [];
+
   Quentity_models quentity_models = Quentity_models(que: 1);
-
-  List addedproduct = [];
-
-  // get totalquntity {
-  //   int quantity = 0;
-  //   addedproduct.forEach((element) {
-  //     quantity += element.qun;
-  //   });
-  //   return quantity;
-  // }
-
-  get totalprice {
-    double totalp = 0;
-    addedproduct.forEach((element) {
-      totalp += element.price * element.qun;
-    });
-    return totalp;
+  queincriment() {
+    quentity_models.que++;
+    update();
   }
 
-  void addcart({required QueryDocumentSnapshot<Map<String, dynamic>> data}) {
-    addedproduct.add(data);
+  quedecriment() {
+    (quentity_models.que > 1) ? quentity_models.que-- : null;
     update();
   }
 
   void removedata({required QueryDocumentSnapshot<Map<String, dynamic>> data}) {
     addedproduct.remove(data);
+    update();
+  }
+
+  one() {
+    quentity_models.que = 1;
     update();
   }
 }

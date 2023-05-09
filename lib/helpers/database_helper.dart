@@ -16,8 +16,4 @@ class Firestorehelper {
   Stream<QuerySnapshot<Map<String, dynamic>>> featchfruitrecord() {
     return firebaseFirestore.collection("Fruit").snapshots();
   }
-
-  addtocart({required Map<String, dynamic> product}) {
-    firestorehelper.addtocart(product: product);
-  }
 }

@@ -33,7 +33,6 @@ class _Splash_screenState extends State<Splash_screen>
 
   @override
   void dispose() {
-    // TODO: implement dispose
     super.dispose();
     animationController.dispose();
   }
